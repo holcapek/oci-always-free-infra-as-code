@@ -1,5 +1,6 @@
 resource "oci_core_vcn" "vcn" {
   compartment_id = var.tenancy_id
+  display_name   = "${var.prefix} VCN"
   cidr_blocks    = ["10.0.0.0/16"]
   dns_label      = "ocaexam"
 }
@@ -16,6 +17,7 @@ resource "oci_core_default_route_table" "default_route_table" {
 
 resource "oci_core_subnet" "public_subnet" {
   cidr_block                 = "10.0.0.0/28"
+  display_name               = "${var.prefix} subnet"
   compartment_id             = var.tenancy_id
   vcn_id                     = oci_core_vcn.vcn.id
   dns_label                  = "public"
@@ -24,6 +26,7 @@ resource "oci_core_subnet" "public_subnet" {
 
 resource "oci_core_internet_gateway" "internet_gateway" {
   compartment_id = var.tenancy_id
+  display_name   = "${var.prefix} internet gateway"
   vcn_id         = oci_core_vcn.vcn.id
   enabled        = true
 }
@@ -47,6 +50,7 @@ resource "oci_core_instance" "amd64_instance_1" {
   compartment_id       = var.tenancy_id
   shape                = "VM.Standard.E2.1.Micro"
   preserve_boot_volume = false
+  display_name         = "${var.prefix} adm64-1 instance"
 
   create_vnic_details {
     assign_public_ip = true
@@ -78,6 +82,7 @@ resource "oci_core_instance" "amd64_instance_2" {
   compartment_id       = var.tenancy_id
   shape                = "VM.Standard.E2.1.Micro"
   preserve_boot_volume = false
+  display_name         = "${var.prefix} adm64-2 instance"
 
   create_vnic_details {
     assign_public_ip = true
@@ -109,6 +114,7 @@ resource "oci_core_instance" "arm64_instance_1" {
   compartment_id       = var.tenancy_id
   shape                = "VM.Standard.A1.Flex"
   preserve_boot_volume = false
+  display_name         = "${var.prefix} arm64-1 instance"
 
   create_vnic_details {
     assign_public_ip = true
@@ -145,6 +151,7 @@ resource "oci_core_instance" "arm64_instance_2" {
   compartment_id       = var.tenancy_id
   shape                = "VM.Standard.A1.Flex"
   preserve_boot_volume = false
+  display_name         = "${var.prefix} arm64-2 instance"
 
   create_vnic_details {
     assign_public_ip = true
