@@ -1,36 +1,3 @@
-resource "oci_core_vcn" "vcn" {
-  compartment_id = var.tenancy_id
-  display_name   = "${var.prefix} VCN"
-  cidr_blocks    = ["10.0.0.0/16"]
-  dns_label      = "ocaexam"
-}
-
-resource "oci_core_default_route_table" "default_route_table" {
-  compartment_id             = var.tenancy_id
-  manage_default_resource_id = oci_core_vcn.vcn.default_route_table_id
-  route_rules {
-    network_entity_id = oci_core_internet_gateway.internet_gateway.id
-    destination_type  = "CIDR_BLOCK"
-    destination       = "0.0.0.0/0"
-  }
-}
-
-resource "oci_core_subnet" "public_subnet" {
-  cidr_block                 = "10.0.0.0/28"
-  display_name               = "${var.prefix} subnet"
-  compartment_id             = var.tenancy_id
-  vcn_id                     = oci_core_vcn.vcn.id
-  dns_label                  = "public"
-  prohibit_public_ip_on_vnic = false
-}
-
-resource "oci_core_internet_gateway" "internet_gateway" {
-  compartment_id = var.tenancy_id
-  display_name   = "${var.prefix} internet gateway"
-  vcn_id         = oci_core_vcn.vcn.id
-  enabled        = true
-}
-
 data "oci_identity_availability_domains" "ads" {
   compartment_id = var.tenancy_id
 }
@@ -55,6 +22,7 @@ resource "oci_core_instance" "amd64_instance_1" {
   create_vnic_details {
     assign_public_ip = true
     subnet_id        = oci_core_subnet.public_subnet.id
+    hostname_label   = "amd64-1"
   }
 
   metadata = {
@@ -87,6 +55,7 @@ resource "oci_core_instance" "amd64_instance_2" {
   create_vnic_details {
     assign_public_ip = true
     subnet_id        = oci_core_subnet.public_subnet.id
+    hostname_label   = "amd64-2"
   }
 
   metadata = {
@@ -119,6 +88,7 @@ resource "oci_core_instance" "arm64_instance_1" {
   create_vnic_details {
     assign_public_ip = true
     subnet_id        = oci_core_subnet.public_subnet.id
+    hostname_label   = "arm64-1"
   }
 
   metadata = {
@@ -156,6 +126,7 @@ resource "oci_core_instance" "arm64_instance_2" {
   create_vnic_details {
     assign_public_ip = true
     subnet_id        = oci_core_subnet.public_subnet.id
+    hostname_label   = "arm64-2"
   }
 
   metadata = {
