@@ -4,12 +4,12 @@ data "oci_identity_availability_domains" "ads" {
 
 data "oci_core_images" "amd64_images" {
   compartment_id = var.tenancy_id
-  display_name   = "Oracle-Linux-9.0-2022.08.17-0"
+  display_name   = "Oracle-Linux-7.9-2022.10.04-0"
 }
 
 data "oci_core_images" "arm64_images" {
   compartment_id = var.tenancy_id
-  display_name   = "Oracle-Linux-9.0-aarch64-2022.08.17-0"
+  display_name   = "Oracle-Linux-7.9-aarch64-2022.10.04-0"
 }
 
 resource "oci_core_instance" "amd64_instance_1" {
