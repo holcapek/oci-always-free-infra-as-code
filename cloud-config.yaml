@@ -13,10 +13,103 @@ packages:
   - docker-ce-cli
   - containerd.io
   - docker-compose-plugin
+  - python36-oci-cli
 
-final_message: |
-  cloud-init has finished
-  version: $version
-  timestamp: $timestamp
-  datasource: $datasource
-  uptime: $uptime
+locale: en_US.utf8
+
+write_files:
+  - path: /root/cloud-config.sh
+    permissions: '0544'
+    content: |
+      #!/bin/bash
+      #
+      # needed to stop auditd
+      sed -i '/^RefuseManualStop=yes/ d' /usr/lib/systemd/system/auditd.service
+      systemctl daemon-reload
+      #
+      # list of non-vital services
+      units=(\
+        "abrtd.service" \
+        "auditd.service" \
+        "atd.service" \
+        "firewalld.service" \
+        "gssproxy.service" \
+        "kdump.service" \
+        "libstoragemgmt.service" \
+        "lvm2-lvmetad.service" \
+        "lvm2-lvmetad.socket" \
+        "lvm2-monitor.service" \
+        "lvm2-lvmpolld.socket" \
+        "oracle-cloud-agent.service" \
+        "oracle-cloud-agent-updater.service" \
+        "oswatcher.service" \
+        "polkit.service" \
+        "rhnsd.service" \
+        "rpcbind.service" \
+        "rpcbind.socket" \
+        "smartd.service" \
+        "tuned.service" \
+        "swap.target" \
+        "cryptsetup.target" \
+        "nfs-client.target" \
+        "dev-hugepages.mount" \
+        "remote-fs-pre.target" \
+        "remote-fs.target" \
+        "rpc_pipefs.target" \
+        "var-lib-nfs-rpc_pipefs.mount" \
+      )
+      #
+      # stop and disable non-vital units
+      for unit in ${units[*]}
+      do
+        systemctl stop $unit
+        systemctl disable $unit
+      done
+      #
+      # disable swap
+      swapoff -a
+      sed -i '/\bswap\b/ d' /etc/fstab
+      #
+      # disable SELinux
+      sed -i 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+      #
+      # tweak kernel parameters
+      sed -i '/^GRUB_CMDLINE_LINUX=/ s/crashkernel=auto//' /etc/default/grub
+      sed -i '/^GRUB_CMDLINE_LINUX=/ s/crash_kexec_post_notifiers//' /etc/default/grub
+      sed -i '/^GRUB_CMDLINE_LINUX=/ s/LANG=en_US.UTF-8/LANG=en_US.utf8/' /etc/default/grub 
+      sed -i '/^GRUB_CMDLINE_LINUX=/ s/"$/selinux=0"/' /etc/default/grub
+      grub2-mkconfig -o /etc/grub2-efi.cfg
+      #
+      # disable non-vital yum repositories
+      disable_yum_repos=(\
+        "ol7_MySQL80" \
+        "ol7_MySQL80_connectors_community" \
+        "ol7_MySQL80_tools_community" \
+        "ol7_ksplice" \
+      )
+      for disable_yum_repo in ${disable_yum_repos[*]}
+      do
+        yum-config-manager --disable $disable_yum_repo
+      done
+      #
+      # enable needed yum repos
+      enable_yum_repos=(\
+        "ol7_developer" \
+      )
+      for enable_yum_repo in ${enable_yum_repos[*]}
+      do
+        yum-config-manager --enable $enable_yum_repo
+      done
+
+runcmd:
+  - [ "/root/cloud-config.sh" ]
+  - [ "reboot" ]
+
+# power-state-change module in cloud_final_modules section
+# of /etc/cloud/cloud.cfg.d/99_oci_cloud.cfg, so need to reboot
+# as the final command in runcmd
+#
+#power_state:
+#  delay: now
+#  mode: reboot
+#  message: Rebooting to apply changed configuration
