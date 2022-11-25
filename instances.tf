@@ -158,3 +158,19 @@ resource "oci_core_instance" "arm64_instance_2" {
     ocpus         = 2
   }
 }
+
+resource "oci_identity_dynamic_group" "instances_dynamic_group" {
+  compartment_id = var.tenancy_id
+  description    = "${var.prefix} instances dynamic group"
+  matching_rule  = "All { instance.compartment.id='${var.tenancy_id}' }"
+  name           = "${var.prefix}-instances-dg"
+}
+
+resource "oci_identity_policy" "instances_dynamic_group_policy" {
+  compartment_id = var.tenancy_id
+  description    = "${var.prefix} instances dynamic group policy"
+  name           = "${var.prefix}-instances-dg-policy"
+  statements = [
+    "Allow dynamic-group ${oci_identity_dynamic_group.instances_dynamic_group.name} to read all-resources in tenancy",
+  ]
+}

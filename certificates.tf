@@ -19,7 +19,7 @@ resource "oci_kms_key" "asymmetric_hsm_key" {
 resource "oci_identity_dynamic_group" "ca_dynamic_group" {
   compartment_id = var.tenancy_id
   description    = "${var.prefix} CA dynamic group"
-  matching_rule  = "All { resource.type='certificateauthority' }"
+  matching_rule  = "All { resource.type = 'certificateauthority' }"
   name           = "${var.prefix}-ca-dg"
 }
 
@@ -28,8 +28,8 @@ resource "oci_identity_policy" "ca_dynamic_group_policy" {
   description    = "${var.prefix} CA dynamic group policy"
   name           = "${var.prefix}-ca-dg-policy"
   statements = [
-    "Allow dynamic-group ocaexam-ca-dg to use keys in tenancy",
-    "Allow dynamic-group ocaexam-ca-dg to manage objects in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.ca_dynamic_group.name} to use keys in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.ca_dynamic_group.name} to manage objects in tenancy",
   ]
 }
 
